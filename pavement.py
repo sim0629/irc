@@ -1,6 +1,8 @@
 import os
 import platform
 
+import setuptools
+
 import paver.easy
 import paver.setuputils
 
@@ -10,11 +12,12 @@ def read_long_description():
     return data
 
 paver.setuputils.setup(
-    name="python-irclib",
+    name="irc",
     description="IRC (Internet Relay Chat) protocol client library for Python",
     long_description=read_long_description(),
     use_hg_version=True,
-    package_dir={'': 'lib'},
+    packages=setuptools.find_packages(),
+    package_dir={'': 'lib', 'irc': 'irc'},
     py_modules=["irclib", "ircbot"],
     author="Joel Rosdahl",
     author_email="joel@rosdahl.net",
