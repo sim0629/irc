@@ -1,11 +1,11 @@
 import random
 
-import irclib
+import irc.client
 
 def test_version():
-	assert 'VERSION' in vars(irclib)
-	assert isinstance(irclib.VERSION, tuple)
-	assert irclib.VERSION, "No VERSION detected."
+	assert 'VERSION' in vars(irc.client)
+	assert isinstance(irc.client.VERSION, tuple)
+	assert irc.client.VERSION, "No VERSION detected."
 
 def test_delayed_command_order():
 	"""
@@ -14,7 +14,7 @@ def test_delayed_command_order():
 	null = lambda: None
 	delays = [random.randint(0, 99) for x in xrange(5)]
 	cmds = sorted([
-		irclib.DelayedCommand(delay, null, tuple())
+		irc.client.DelayedCommand(delay, null, tuple())
 		for delay in delays
 	])
 	assert [c.delay.seconds for c in cmds] == sorted(delays)
