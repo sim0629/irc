@@ -1,0 +1,257 @@
+5.0
+===
+
+Another backward-incompatible change. In irc 5.0, many of the unnecessary
+getter functions have been removed and replaced with simple attributes. This
+change addresses issue #2. In particular:
+
+ - Connection._get_socket() -> Connection.socket (including subclasses)
+ - Event.eventtype() -> Event.type
+ - Event.source() -> Event.source
+ - Event.target() -> Event.target
+ - Event.arguments() -> Event.arguments
+
+The `nm_to_*` functions were removed. Instead, use the NickMask class
+attributes.
+
+These deprecated function aliases were removed from irc.client::
+
+ - parse_nick_modes -> modes.parse_nick_modes
+ - parse_channel_modes -> modes.parse_channel_modes
+ - generated_events -> events.generated
+ - protocol_events -> events.protocol
+ - numeric_events -> events.numeric
+ - all_events -> events.all
+ - irc_lower -> strings.lower
+
+Also, the parameter name when constructing an event was renamed from
+`eventtype` to simply `type`.
+
+4.0
+===
+
+* Removed deprecated arguments to ServerConnection.connect. See notes on the
+  3.3 release on how to use the connect_factory parameter if your application
+  requires ssl, ipv6, or other connection customization.
+
+3.6.1
+=====
+
+* Filter out disconnected sockets when processing input.
+
+3.6
+===
+
+* Created two new exceptions in `irc.client`: `MessageTooLong` and
+  `InvalidCharacters`.
+* Use explicit exceptions instead of ValueError when sending data.
+
+3.5
+===
+
+* SingleServerIRCBot now accepts keyword arguments which are passed through
+  to the `ServerConnection.connect` method. One can use this to use SSL for
+  connections::
+
+    factory = irc.connection.Factory(wrapper=ssl.wrap_socket)
+    bot = irc.bot.SingleServerIRCBot(..., connect_factory = factory)
+
+
+3.4.2
+=====
+
+* Issue #6: Fix AttributeError when legacy parameters are passed to
+  `ServerConnection.connect`.
+* Issue #7: Fix TypeError on `iter(LineBuffer)`.
+
+3.4.1
+=====
+
+3.4 never worked - the decoding customization feature was improperly
+implemented and never tested.
+
+* The ServerConnection now allows custom classes to be supplied to customize
+  the decoding of incoming lines. For example, to disable the decoding of
+  incoming lines,
+  replace the `buffer_class` on the ServerConnection with a version that
+  passes through the lines directly::
+
+    irc.client.ServerConnection.buffer_class = irc.client.LineBuffer
+
+  This fixes #5.
+
+3.4
+===
+
+*Broken Release*
+
+3.3
+===
+
+* Added `connection` module with a Factory for creating socket connections.
+* Added `connect_factory` parameter to the ServerConnection.
+
+It's now possible to create connections with custom SSL parameters or other
+socket wrappers. For example, to create a connection with a custom SSL cert::
+
+    import ssl
+    import irc.client
+    import irc.connection
+    import functools
+
+    irc = irc.client.IRC()
+    server = irc.server()
+    wrapper = functools.partial(ssl.wrap_socket, ssl_cert=my_cert())
+    server.connect(connect_factory = irc.connection.Factory(wrapper=wrapper))
+
+With this release, many of the parameters to `ServerConnection.connect` are
+now deprecated:
+
+    - localaddress
+    - localport
+    - ssl
+    - ipv6
+
+Instead, one should pass the appropriate values to a `connection.Factory`
+instance and pass that factory to the .connect method. Backwards-compatibility
+will be maintained for these parameters until the release of irc 4.0.
+
+3.2.3
+=====
+
+* Restore Python 2.6 compatibility.
+
+3.2.2
+=====
+
+* Protect from UnicodeDecodeError when decoding data on the wire when data is
+  not properly encoded in ASCII or UTF-8.
+
+3.2.1
+=====
+
+* Additional branch protected by mutex.
+
+3.2
+===
+
+* Implemented thread safety via a reentrant lock guarding shared state in IRC
+  objects.
+
+3.1.1
+=====
+
+* Fix some issues with bytes/unicode on Python 3
+
+3.1
+===
+
+* Distribute using setuptools rather than paver.
+* Minor tweaks for Python 3 support. Now installs on Python 3.
+
+3.0.1
+=====
+
+* Added error checking when sending a message - for both message length and
+  embedded carriage returns. Fixes #4.
+* Updated README.
+
+3.0
+===
+
+* Improved Unicode support. Fixes failing tests and errors lowering Unicode
+  channel names.
+* Issue #3541414 - The ServerConnection and DCCConnection now encode any
+  strings as UTF-8 before transmitting.
+* Issue #3527371 - Updated strings.FoldedCase to support comparison against
+  objects of other types.
+* Shutdown the sockets before closing.
+
+Applications that are currently encoding unicode as UTF-8 before passing the
+strings to `ServerConnection.send_raw` need to be updated to send Unicode
+or ASCII.
+
+2.0.4
+=====
+
+This release officially deprecates 2.0.1-2.0.3 in favor of 3.0.
+
+* Re-release of irc 2.0 (without the changes from 2.0.1-2.0.3) for
+  correct compatibility indication.
+
+2.0
+===
+
+* DelayedCommands now use the local time for calculating 'at' and 'due'
+  times. This will be more friendly for simple servers. Servers that expect
+  UTC times should either run in UTC or override DelayedCommand.now to
+  return an appropriate time object for 'now'. For example::
+
+    def startup_bot():
+        irc.client.DelayedCommand.now = irc.client.DelayedCommand.utcnow
+        ...
+
+1.1
+===
+
+* Added irc.client.PeriodicCommandFixedDelay. Schedule this command
+  to have a function executed at a specific time and then at periodic
+  intervals thereafter.
+
+1.0
+===
+
+* Removed `irclib` and `ircbot` legacy modules.
+
+0.9
+===
+
+* Fix file saving using dccreceive.py on Windows. Fixes #2863199.
+* Created NickMask class from nm_to_* functions. Now if a source is
+  a NickMask, one can access the .nick, .host, and .user attributes.
+* Use correct attribute for saved connect args. Fixes #3523057.
+
+0.8
+===
+
+* Added ServerConnection.reconnect method. Fixes #3515580.
+
+0.7.1
+=====
+
+* Added missing events. Fixes #3515578.
+
+0.7
+===
+
+* Moved functionality from irclib module to irc.client module.
+* Moved functionality from ircbot module to irc.bot module.
+* Retained irclib and ircbot modules for backward-compatibility. These
+  will be removed in 1.0.
+* Renamed project to simply 'irc'.
+
+To support the new module structure, simply replace references to the irclib
+module with irc.client and ircbot module with irc.bot. This project will
+support that interface through all versions of irc 1.x, so if you've made
+these changes, you can safely depend on `irc >= 0.7, <2.0dev`.
+
+0.6.3
+=====
+
+* Fixed failing test where DelayedCommands weren't being sorted properly.
+  DelayedCommand a now subclass of the DateTime object, where the command's
+  due time is the datetime. Fixed issue #3518508.
+
+0.6.2
+=====
+
+* Fixed incorrect usage of Connection.execute_delayed (again).
+
+0.6.0
+=====
+
+* Minimum Python requirement is now Python 2.6. Python 2.3 and earlier should use 0.5.0
+  or earlier.
+* Removed incorrect usage of Connection.execute_delayed. Added Connection.execute_every.
+  Fixed issue 3516241.
+* Use new-style classes.
