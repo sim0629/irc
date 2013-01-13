@@ -13,7 +13,7 @@ def test_delayed_command_order():
 	null = lambda: None
 	delays = [random.randint(0, 99) for x in range(5)]
 	cmds = sorted([
-		schedule.DelayedCommand(delay, null, tuple())
+		schedule.DelayedCommand.after(delay, null)
 		for delay in delays
 	])
 	assert [c.delay.seconds for c in cmds] == sorted(delays)
@@ -21,7 +21,7 @@ def test_delayed_command_order():
 def test_periodic_command_delay():
 	"A PeriodicCommand must have a positive, non-zero delay."
 	with pytest.raises(ValueError) as exc_info:
-		schedule.PeriodicCommand(0, None, None)
+		schedule.PeriodicCommand.after(0, None)
 	assert str(exc_info.value) == test_periodic_command_delay.__doc__
 
 def test_periodic_command_fixed_delay():
@@ -33,7 +33,20 @@ def test_periodic_command_fixed_delay():
 		at = datetime.datetime.now(),
 		delay = datetime.timedelta(seconds=2),
 		function = lambda: None,
-		arguments = [],
 		)
 	assert fd.due() == True
 	assert fd.next().due() == False
+
+class TestCommands(object):
+	def test_command_at_noon(self):
+		"""
+		Create a periodic command that's run at noon every day.
+		"""
+		when = datetime.time(12,0)
+		cmd = schedule.PeriodicCommandFixedDelay.daily_at(when, function=None)
+		assert cmd.due() is False
+		next_cmd = cmd.next()
+		daily = datetime.timedelta(days=1)
+		day_from_now = datetime.datetime.now() + daily
+		two_days_from_now = day_from_now + daily
+		assert day_from_now < next_cmd < two_days_from_now
