@@ -61,6 +61,7 @@ import itertools
 import threading
 import abc
 import collections
+import functools
 
 try:
     import pkg_resources
@@ -97,10 +98,6 @@ except Exception:
 # connection.quit() only sends QUIT to the server.
 # ERROR from the server triggers the error event and the disconnect event.
 # dropping of the connection triggers the disconnect event.
-
-# for backward-compatibility
-from .schedule import (PeriodicCommand, DelayedCommand,
-    PeriodicCommandFixedDelay)
 
 class IRCError(Exception):
     "An IRC exception"
@@ -218,8 +215,8 @@ class IRC(object):
                 command = self.delayed_commands[0]
                 if not command.due():
                     break
-                command.function(*command.arguments)
-                if isinstance(command, schedule.PeriodicCommandBase):
+                command.function()
+                if isinstance(command, schedule.PeriodicCommand):
                     self._schedule_command(command.next())
                 del self.delayed_commands[0]
 
@@ -321,7 +318,8 @@ class IRC(object):
             function -- Function to call.
             arguments -- Arguments to give the function.
         """
-        command = schedule.DelayedCommand.at_time(at, function, arguments)
+        function = functools.partial(function, *arguments)
+        command = schedule.DelayedCommand.at_time(at, function)
         self._schedule_command(command)
 
     def execute_delayed(self, delay, function, arguments=()):
@@ -332,7 +330,8 @@ class IRC(object):
         function -- Function to call.
         arguments -- Arguments to give the function.
         """
-        command = schedule.DelayedCommand(delay, function, arguments)
+        function = functools.partial(function, *arguments)
+        command = schedule.DelayedCommand.after(delay, function)
         self._schedule_command(command)
 
     def execute_every(self, period, function, arguments=()):
@@ -343,7 +342,8 @@ class IRC(object):
         function -- Function to call.
         arguments -- Arguments to give the function.
         """
-        command = schedule.PeriodicCommand(period, function, arguments)
+        function = functools.partial(function, *arguments)
+        command = schedule.PeriodicCommand.after(period, function)
         self._schedule_command(command)
 
     def _schedule_command(self, command):
