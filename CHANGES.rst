@@ -7,6 +7,17 @@ Changes
 * Added a ``set_keepalive`` method to the ServerConnection. Sends a periodic
   PING message every indicated interval.
 
+8.2
+===
+
+* Added support for throttling send_raw messages via the ServerConnection
+  object. For example, on any connection object:
+
+    connection.set_rate_limit(30)
+
+  That would set the rate limit to 30 Hz (30 per second). Thanks to Jason
+  Kendall for the suggestion and bug fixes.
+
 8.1.2
 =====
 
